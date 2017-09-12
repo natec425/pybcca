@@ -2,7 +2,7 @@ import curses
 import time
 
 
-def run(init, update, view, rate=None):
+def run(init, update, view, rate=None, quit_when=None, final_view=None):
     '''(State, (String, State) -> State, (State, Int, Int) -> String, Int) -> None
 
     Helper inspired by The Elm Architecture for running simple terminal applications.
@@ -36,21 +36,28 @@ def run(init, update, view, rate=None):
             wait = 1 / rate
             previous_tick = time.time()
         while True:
-            if not (rate is None) and time.time() - previous_tick > wait:
-                previous_tick = time.time()
-                state = update('TICK', state)
-                y, x = stdscr.getmaxyx()
-                stdscr.addstr(0, 0, view(state, x, y))
-            try:
-                key = stdscr.getkey()
-            except KeyboardInterrupt:
-                return
-            except:
-                pass
+            if quit_when is not None and quit_when(state):
+                if final_view is not None:
+                    stdscr.addstr(0, 0, final_view(state, x, y))
+                else:
+                    stdscr.addstr(0, 0, view(state, x, y))
+                stdscr.getkey()
             else:
-                stdscr.clear()
-                state = update(key, state)
-                y, x = stdscr.getmaxyx()
-                stdscr.addstr(0, 0, view(state, x, y))
+                if not (rate is None) and time.time() - previous_tick > wait:
+                    previous_tick = time.time()
+                    state = update('TICK', state)
+                    y, x = stdscr.getmaxyx()
+                    stdscr.addstr(0, 0, view(state, x, y))
+                try:
+                    key = stdscr.getkey()
+                except KeyboardInterrupt:
+                    return
+                except:
+                    pass
+                else:
+                    stdscr.clear()
+                    state = update(key, state)
+                    y, x = stdscr.getmaxyx()
+                    stdscr.addstr(0, 0, view(state, x, y))
 
     curses.wrapper(helper)
