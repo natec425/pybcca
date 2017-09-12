@@ -43,7 +43,10 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
                     stdscr.addstr(0, 0, final_view(state, x, y))
                 else:
                     stdscr.addstr(0, 0, view(state, x, y))
-                stdscr.getkey()
+                try:
+                    stdscr.getkey()
+                except KeyboardInterrupt:
+                    return
             else:
                 if not (rate is None) and time.time() - previous_tick > wait:
                     previous_tick = time.time()
