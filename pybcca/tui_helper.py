@@ -38,6 +38,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
         while True:
             if quit_when is not None and quit_when(state):
                 stdscr.nodelay(0)
+                stdscr.clear()
                 if final_view is not None:
                     stdscr.addstr(0, 0, final_view(state, x, y))
                 else:
@@ -48,6 +49,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
                     previous_tick = time.time()
                     state = update('TICK', state)
                     y, x = stdscr.getmaxyx()
+                    stdscr.clear()
                     stdscr.addstr(0, 0, view(state, x, y))
                 try:
                     key = stdscr.getkey()
@@ -59,6 +61,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
                     stdscr.clear()
                     state = update(key, state)
                     y, x = stdscr.getmaxyx()
+                    stdscr.clear()
                     stdscr.addstr(0, 0, view(state, x, y))
 
     curses.wrapper(helper)
