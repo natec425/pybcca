@@ -37,6 +37,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
             previous_tick = time.time()
         while True:
             if quit_when is not None and quit_when(state):
+                stdscr.nodelay(0)
                 if final_view is not None:
                     stdscr.addstr(0, 0, final_view(state, x, y))
                 else:
