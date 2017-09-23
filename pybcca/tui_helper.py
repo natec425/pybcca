@@ -1,5 +1,24 @@
+from threading import Thread
+from queue import Queue
 import curses
 import time
+
+
+def listen_to_ticks(rate, input_queue):
+    if rate is not None:
+        while True:
+            input_queue.put('TICK')
+            time.sleep(1 / rate)
+
+
+def listen_to_keys(input_queue, get_input):
+    while True:
+        try:
+            input_queue.put(get_input())
+        except curses.error:
+            pass
+        finally:
+            time.sleep(.1)
 
 
 def run(init, update, view, rate=None, quit_when=None, final_view=None):
@@ -19,7 +38,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
 
     def update(key, state):
         return state + 1
-    
+
     def view(state, width, height):
         return 'The current number is: {}'.format(state)
 
@@ -28,43 +47,33 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
     '''
 
     def helper(stdscr):
-        state = init
-        y, x = stdscr.getmaxyx()
-        stdscr.addstr(0, 0, view(state, x, y))
-        if not (rate is None):
-            stdscr.nodelay(1)
-            wait = 1 / rate
-            previous_tick = time.time()
-        while True:
-            if quit_when is not None and quit_when(state):
-                stdscr.nodelay(0)
-                stdscr.clear()
-                if final_view is not None:
-                    stdscr.addstr(0, 0, final_view(state, x, y))
-                else:
-                    stdscr.addstr(0, 0, view(state, x, y))
-                try:
-                    stdscr.getkey()
-                except KeyboardInterrupt:
-                    return
-            else:
-                if not (rate is None) and time.time() - previous_tick > wait:
-                    previous_tick = time.time()
-                    state = update('TICK', state)
-                    y, x = stdscr.getmaxyx()
-                    stdscr.clear()
-                    stdscr.addstr(0, 0, view(state, x, y))
-                try:
-                    key = stdscr.getkey()
-                except KeyboardInterrupt:
-                    return
-                except:
-                    pass
-                else:
-                    stdscr.clear()
-                    state = update(key, state)
-                    y, x = stdscr.getmaxyx()
-                    stdscr.clear()
-                    stdscr.addstr(0, 0, view(state, x, y))
+        def clear_and_draw(s):
+            stdscr.clear()
+            stdscr.addstr(0, 0, s)
 
-    curses.wrapper(helper)
+        y, x = stdscr.getmaxyx()
+        stdscr.nodelay(1)
+
+        input_queue = Queue()
+
+        Thread(
+            target=listen_to_ticks, args=(rate, input_queue),
+            daemon=True).start()
+        Thread(
+            target=listen_to_keys,
+            args=(input_queue, stdscr.getkey),
+            daemon=True).start()
+
+        state = init
+        while True:
+            clear_and_draw(view(state, x, y))
+            state = update(input_queue.get(), state)
+            if quit_when is not None and quit_when(state):
+                break
+        if final_view is not None:
+            clear_and_draw(final_view(state, x, y))
+
+    try:
+        curses.wrapper(helper)
+    except KeyboardInterrupt:
+        return
