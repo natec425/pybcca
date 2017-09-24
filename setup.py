@@ -2,7 +2,7 @@ from setuptools import setup
 setup(
     name='pybcca',
     packages=['pybcca'],
-    version='0.3.3',
+    version='0.3.4',
     description='Helpers for Base Camp Coding Academy',
     author='Nate Clark',
     author_email='natec425@gmail.com',
