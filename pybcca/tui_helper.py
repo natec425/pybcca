@@ -24,17 +24,21 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
     '''(State, (String, State) -> State, (State, Int, Int) -> String, Int) -> None
 
     Helper inspired by The Elm Architecture for running simple terminal applications.
+
     `init` is the initial state of the application.
+
     `update` is a transition function from the current state
         to the next state when given an input character.
+
     `view` returns the string that should be printed for the current state of the application
         given the width and height of the curses window.
+        
     `rate` is the number of times per second 'TICK` will be provided to update. By default,
         `rate` is none, and the application will block on input. If `rate` is provided,
         the application will not block on input.
 
     For example, a simple counter application might look like:
-
+    ```
     def update(key, state):
         return state + 1
 
@@ -43,6 +47,7 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
 
     if __name__ == '__main__':
         run(0, update, view)
+    ```
     '''
 
     def helper(stdscr):
