@@ -5,10 +5,9 @@ import time
 
 
 def listen_to_ticks(rate, input_queue):
-    if rate is not None:
-        while True:
-            input_queue.put('TICK')
-            time.sleep(1 / rate)
+    while True:
+        input_queue.put('TICK')
+        time.sleep(1 / rate)
 
 
 def listen_to_keys(input_queue, get_input):
@@ -18,7 +17,7 @@ def listen_to_keys(input_queue, get_input):
         except curses.error:
             pass
         finally:
-            time.sleep(.1)
+            time.sleep(1 / 30)
 
 
 def run(init, update, view, rate=None, quit_when=None, final_view=None):
@@ -56,13 +55,15 @@ def run(init, update, view, rate=None, quit_when=None, final_view=None):
 
         input_queue = Queue()
 
-        Thread(
-            target=listen_to_ticks, args=(rate, input_queue),
-            daemon=True).start()
+        if rate is not None:
+            Thread(
+                target=listen_to_ticks,
+                args=(rate, input_queue),
+                daemon=True, ).start()
         Thread(
             target=listen_to_keys,
             args=(input_queue, stdscr.getkey),
-            daemon=True).start()
+            daemon=True, ).start()
 
         state = init
         while True:
